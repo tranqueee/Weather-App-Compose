@@ -1,57 +1,53 @@
 package com.example.weather.data.dataManager
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.ui.res.stringResource
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.example.weather.R
 import com.example.weather.data.WeatherData
-import org.json.JSONArray
 import org.json.JSONObject
+import java.time.Instant
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
-fun getWeatherData (city: String, context: Context, data: MutableState<WeatherData>, weatherDays: MutableState<ArrayList<WeatherData>>, weatherHours: MutableState<ArrayList<WeatherData>>) {
-    val url = "http://api.weatherapi.com/v1/forecast.json?key=1f380f9415af41ea94e171605242312&q=$city&days=7&aqi=no&alerts=no"
+@Composable
+fun GetWeatherData (location: String, context: Context, weatherDays: MutableState<ArrayList<WeatherData>>, weatherHours: MutableState<ArrayList<WeatherData>>) {
+    val url = "http://api.weatherapi.com/v1/forecast.json?key=1f380f9415af41ea94e171605242312&q=$location&days=7&aqi=no&alerts=no&lang=${stringResource(R.string.request_language)}"
     val queue = Volley.newRequestQueue(context)
-
-    var currentData = WeatherData("Perm","","","","","","","")
 
     val request = StringRequest(Request.Method.GET, url,
         {
             response ->
 
-            val daysData = getWeatherByDays(response)
-            weatherDays.value = daysData
-            val hoursData = getWeatherByHours(response)
-            weatherHours.value = hoursData
+            val responseArray = response.toByteArray(Charsets.ISO_8859_1)
+            val newResponse = String(responseArray,Charsets.UTF_8)
 
-            val responseObject = JSONObject(response)
-            currentData.currentTemp = (responseObject.getJSONObject("current").getString("temp_c")
-                .toFloat().toInt()).toString()
-            currentData.icon = responseObject.getJSONObject("current").getJSONObject("condition").getString("icon")
-            currentData.city = responseObject.getJSONObject("location").getString("name")
-            currentData.condition = responseObject.getJSONObject("current").getJSONObject("condition").getString("text")
-            currentData.minTemp = daysData.get(0).minTemp
-            currentData.maxTemp = daysData.get(0).maxTemp
-            data.value = currentData
+            weatherDays.value = getWeatherByDays(newResponse)
+            weatherHours.value = getWeatherByHours(newResponse)
 
         },
         {
             error ->
-            Log.d("df","thats cap $error")
+            Log.d("HTTP REQUEST","$error")
         }
     )
     queue.add(request)
 
-    Log.d("DEBUG","current temp is ${data.value.currentTemp}")
-    Log.d("DEBUG","current temp is ${data.value.icon}")
 }
 
 fun getWeatherByDays (response: String): ArrayList<WeatherData> {
+
+    val responseArray = response.toByteArray(Charsets.UTF_8)
+    val newResponse = responseArray.decodeToString()
     
-    val dataObject = JSONObject(response)
+    val dataObject = JSONObject(newResponse)
     val city = dataObject.getJSONObject("location").getString("name")
     val arrayData = dataObject.getJSONObject("forecast").getJSONArray("forecastday")
     val dataByDays = ArrayList<WeatherData>()
@@ -69,38 +65,75 @@ fun getWeatherByDays (response: String): ArrayList<WeatherData> {
             condition = day.getJSONObject("day").getJSONObject("condition").getString("text"),
             time = "",
             date = day.getString("date"),
-        )
-        )
+        ))
+        if (i == 0) {
+            dataByDays[0].currentTemp = (dataObject.getJSONObject("current").getString("temp_c")
+                .toFloat().toInt()).toString()
+        }
     }
 
     return dataByDays
 }
 
-@SuppressLint("NewApi")
 fun getWeatherByHours (response: String): ArrayList<WeatherData> {
     
     val dataObject = JSONObject(response)
     val arrayData = dataObject.getJSONObject("forecast").getJSONArray("forecastday")
+
     val currentDay = arrayData[0] as JSONObject
-    val hours = currentDay.getJSONArray("hour")
+    val hoursCurrent = currentDay.getJSONArray("hour")
+
+    val nextDay = arrayData[1] as JSONObject
+    val hoursNextDay = nextDay.getJSONArray("hour")
+
     val dataByHours = ArrayList<WeatherData>()
     
-    for (i in 0 until hours.length()) {
-        val item = hours[i] as JSONObject
+    for (i in 0 until hoursCurrent.length()) {
+        val item = hoursCurrent[i] as JSONObject
         val date = item.getString("time")
+
         val time = date.replaceRange(0..10,"")
-        
-        dataByHours.add(i, WeatherData(
-            city = "",
-            minTemp = "",
-            maxTemp = "",
-            currentTemp = (item.getString("temp_c")
-                .toFloat().toInt()).toString(),
-            icon = item.getJSONObject("condition").getString("icon"),
-            condition = item.getJSONObject("condition").getString("text"),
-            time = time,
-            date = ""
-        ))
+        val itemHour = time.replaceRange(2..4,"").toInt()
+
+        val currentHour = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH")).toInt()
+
+        if (itemHour >= currentHour) {
+            dataByHours.add(
+                WeatherData(
+                    city = "",
+                    minTemp = "",
+                    maxTemp = "",
+                    currentTemp = (item.getString("temp_c")
+                        .toFloat().toInt()).toString(),
+                    icon = item.getJSONObject("condition").getString("icon"),
+                    condition = item.getJSONObject("condition").getString("text"),
+                    time = time,
+                    date = ""
+                )
+            )
+        }
+    }
+
+    if (dataByHours.size < 24) {
+        for (i in 0 until 24-dataByHours.size) {
+            val item = hoursNextDay[i] as JSONObject
+            val date = item.getString("time")
+            val time = date.replaceRange(0..10,"")
+
+            dataByHours.add(
+                WeatherData(
+                    city = "",
+                    minTemp = "",
+                    maxTemp = "",
+                    currentTemp = (item.getString("temp_c")
+                        .toFloat().toInt()).toString(),
+                    icon = item.getJSONObject("condition").getString("icon"),
+                    condition = item.getJSONObject("condition").getString("text"),
+                    time = time,
+                    date = ""
+                )
+            )
+        }
     }
     
     return dataByHours

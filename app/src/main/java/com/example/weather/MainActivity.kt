@@ -1,8 +1,8 @@
 package com.example.weather
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,18 +14,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.android.volley.Request
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
+import androidx.core.content.ContextCompat
 import com.example.weather.data.WeatherData
-import com.example.weather.data.dataManager.getWeatherData
+import com.example.weather.data.dataManager.GetWeatherData
+import com.example.weather.UI.CurrentWeather
+import com.example.weather.UI.DaysWeather
+import com.example.weather.UI.HoursWeather
 import com.example.weather.ui.theme.WeatherTheme
-import org.json.JSONObject
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        isLocationEnabled()
+
         setContent {
             WeatherTheme {
                 Column (
@@ -33,40 +39,60 @@ class MainActivity : ComponentActivity() {
                         .background(Color(48, 63, 159, 255))
                         .fillMaxSize()
                 ) {
-                    val currentWeatner = remember { mutableStateOf(WeatherData("Perm","","","--","","","","")) }
-                    val weatherDays = remember { mutableStateOf(ArrayList<WeatherData>()) }
-                    val weatherHours = remember { mutableStateOf(ArrayList<WeatherData>()) }
+                    val currentLocation = remember {mutableStateOf("")}
+                    getLocationData(currentLocation, this@MainActivity)
 
-                    getWeatherData("Perm",this@MainActivity,currentWeatner, weatherDays, weatherHours)
-                    MainCard(currentWeatner)
-                    hourWeather(weatherHours)
-                    daysWeather(weatherDays)
+                    val weatherDays = remember {mutableStateOf(arrayListOf(WeatherData(
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        ""
+                    )))
+                    }
+                    val weatherHours = remember {mutableStateOf(ArrayList<WeatherData>())}
+                    GetWeatherData(currentLocation.value,
+                        this@MainActivity,
+                        weatherDays,
+                        weatherHours
+                    )
+
+                    CurrentWeather(weatherDays.value[0])
+                    HoursWeather(weatherHours)
+                    DaysWeather(weatherDays)
                 }
             }
         }
     }
-}
 
-fun getCurrentWeather (city: String, context: Context, data: MutableState<WeatherData>) {
-    val url = "http://api.weatherapi.com/v1/forecast.json?key=1f380f9415af41ea94e171605242312&q=$city&days=7&aqi=no&alerts=no"
-    val queue = Volley.newRequestQueue(context)
-
-    var currentData = WeatherData("Perm","","","","","","", "")
-
-    val request = StringRequest(
-        Request.Method.GET, url,
-        {
-                response ->
-            val responseObject = JSONObject(response)
-            data.value.currentTemp = responseObject.getJSONObject("current").getString("temp_c")
-            data.value.icon = responseObject.getJSONObject("current").getJSONObject("condition").getString("icon")
-        },
-        {
-                error ->
-            Log.d("df","thats cap $error")
+    private fun isLocationEnabled() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            )
+            != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),100)
         }
-    )
-    queue.add(request)
+    }
 
-    Log.d("DEBUG","current temp is ${data.value.currentTemp}")
+    private fun getLocationData(currentLocation: MutableState<String>, context: Context) {
+        val fusedProvider = LocationServices.getFusedLocationProviderClient(context)
+
+        if (ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED) {
+            isLocationEnabled()
+        } else {
+            fusedProvider.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                CancellationTokenSource().token
+            ).addOnCompleteListener {
+                currentLocation.value = "${it.result.latitude}, ${it.result.longitude}"
+            }
+        }
+    }
 }

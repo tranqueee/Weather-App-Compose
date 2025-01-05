@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">weather</string>
+    <string name="app_name">Weather</string>
+    <string name="request_language">en</string>
+    <string name="today_word">Today</string>
 </resources>

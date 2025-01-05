@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-12-25T00:24:51.130961093Z">
+        <DropdownSelection timestamp="2025-01-03T18:25:14.238992340Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/tranqueee/.var/app/com.google.AndroidStudio/config/.android/avd/Medium_Phone_API_24.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/home/tranqueee/.var/app/com.google.AndroidStudio/config/.android/avd/Medium_Phone.avd" />
             </handle>
           </Target>
         </DropdownSelection>

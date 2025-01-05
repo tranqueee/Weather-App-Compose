@@ -1,50 +1,39 @@
-package com.example.weather
+package com.example.weather.UI
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.example.weather.R
 import com.example.weather.data.WeatherData
-import com.example.weather.data.dataManager.getWeatherData
-import com.example.weather.ui.theme.WeatherTheme
-
 
 @Composable
-fun MainCard (item : MutableState<WeatherData>) {
+fun CurrentWeather (item: WeatherData) {
     Box (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 135.dp),
+            .fillMaxHeight(0.4f),
+        contentAlignment = Alignment.Center
     ) {
         Column(modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -55,27 +44,27 @@ fun MainCard (item : MutableState<WeatherData>) {
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 Text(
-                    text = "${item.value.currentTemp}°C",
+                    text = "${item.currentTemp}°C",
                     fontSize = 60.sp,
                     color = Color(232, 234, 246, 255)
                 )
                 AsyncImage(
-                    model = "http:${item.value.icon}",
+                    model = "http:${item.icon}",
                     contentDescription = "",
                     alignment = Alignment.Center,
                 )
             }
             Text(
-                text = "${item.value.minTemp}/${item.value.maxTemp}°C",
+                text = "${item.minTemp}/${item.maxTemp}°C",
                 color = Color(232, 234, 246, 255),
                 fontSize = 25.sp
             )
             Text(
-                text = item.value.condition,
+                text = item.condition,
                 color = Color(232, 234, 246, 255)
             )
             Text(
-                text = item.value.city,
+                text = item.city,
                 color = Color(232, 234, 246, 255)
             )
         }
@@ -83,7 +72,7 @@ fun MainCard (item : MutableState<WeatherData>) {
 }
 
 @Composable
-fun hourWeather (list: MutableState<ArrayList<WeatherData>>) {
+fun HoursWeather (list: MutableState<ArrayList<WeatherData>>) {
 
     Card (
         modifier = Modifier.padding(horizontal = 20.dp),
@@ -127,7 +116,7 @@ fun hourWeather (list: MutableState<ArrayList<WeatherData>>) {
 }
 
 @Composable
-fun daysWeather (list: MutableState<ArrayList<WeatherData>>) {
+fun DaysWeather (list: MutableState<ArrayList<WeatherData>>) {
 
     Card (
         modifier = Modifier
@@ -140,55 +129,48 @@ fun daysWeather (list: MutableState<ArrayList<WeatherData>>) {
             itemsIndexed(list.value) {
                 index, item ->
 
-                var date : String
+                val date : String
 
                 if (index == 0) {
-                    date = "Today"
+                    date = stringResource(R.string.today_word)
                 } else {
                     date = item.date.replace("-",".")
                 }
 
-                Box (
+                Row (
                     modifier = Modifier
+                        .padding(horizontal = 25.dp)
                         .fillMaxWidth()
-                        .padding(vertical = 5.dp),
-                    contentAlignment = Alignment.Center
+                        .height(80.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row (
-                        modifier = Modifier
-                            .padding(horizontal = 25.dp)
-                            .fillMaxWidth()
-                            .height(80.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Text(
+                        date,
+                        modifier = Modifier.padding(start = 5.dp),
+                        color = Color(232, 234, 246, 255),
+                        )
+                    Column (
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.End
                     ) {
                         Text(
-                            date,
-                            modifier = Modifier.padding(start = 5.dp),
-                            color = Color(232, 234, 246, 255),
+                            text = "${item.minTemp}/${item.maxTemp}°C",
+                            fontSize = 35.sp,
+                            color = Color(232, 234, 246, 255)
                         )
-                        Column (
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.End
-                        ) {
-                            Text(
-                                text = "${item.minTemp}/${item.maxTemp}°C",
-                                fontSize = 35.sp,
-                                color = Color(232, 234, 246, 255)
+                        Row {
+                            AsyncImage(
+                                model = "http:${item.icon}",
+                                contentDescription = "",
+                                alignment = Alignment.Center,
+                                modifier = Modifier.padding(start = 40.dp)
                             )
-                            Row {
-                                AsyncImage(
-                                    model = "http:${item.icon}",
-                                    contentDescription = "",
-                                    alignment = Alignment.Center,
-                                    modifier = Modifier.padding(start = 40.dp)
+                            Text(
+                                text = item.condition,
+                                textAlign = TextAlign.Center,
+                                color = Color(232, 234, 246, 255),
                                 )
-                                Text(
-                                    text = item.condition,
-                                    textAlign = TextAlign.Center,
-                                    color = Color(232, 234, 246, 255),
-                                )
-                            }
                         }
                     }
                 }
