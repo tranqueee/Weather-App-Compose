@@ -3,4 +3,5 @@
     <string name="app_name">Погода</string>
     <string name="request_language">ru</string>
     <string name="today_word">Сегодня</string>
+    <string name="loading">Загрузка</string>
 </resources>

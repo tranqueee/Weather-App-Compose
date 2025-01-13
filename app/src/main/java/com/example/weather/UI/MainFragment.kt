@@ -1,10 +1,12 @@
 package com.example.weather.UI
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,7 +17,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,16 +24,36 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.weather.R
-import com.example.weather.data.WeatherData
+import com.example.weather.data.dataManager.retrofit.Forecastday
+import com.example.weather.data.dataManager.retrofit.Hour
+import com.example.weather.data.dataManager.retrofit.MainForecast
 
 @Composable
-fun CurrentWeather (item: WeatherData) {
+fun ShowMainFragment(navController: NavController, weatherViewModel: WeatherViewModel) {
+    val forecast = weatherViewModel.WeatherData.value!!
+
+    Column (
+        modifier = Modifier
+            .background(Color(48, 63, 159, 255))
+            .fillMaxSize()
+    ) {
+        SetHeader(navController, weatherViewModel)
+        CurrentWeather(forecast)
+        HoursWeather(forecast.forecast.forecastday[0].hour)
+        DaysWeather(forecast.forecast.forecastday)
+    }
+}
+
+@Composable
+fun CurrentWeather (forecast: MainForecast) {
+    val temp = forecast.current.temp_c.toInt().toString()
     Box (
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.4f),
+            .fillMaxHeight(0.5f),
         contentAlignment = Alignment.Center
     ) {
         Column(modifier = Modifier.fillMaxWidth(),
@@ -44,27 +65,22 @@ fun CurrentWeather (item: WeatherData) {
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 Text(
-                    text = "${item.currentTemp}°C",
+                    text = "$temp°C",
                     fontSize = 60.sp,
                     color = Color(232, 234, 246, 255)
                 )
                 AsyncImage(
-                    model = "http:${item.icon}",
+                    model = "http:${forecast.current.condition.icon}",
                     contentDescription = "",
-                    alignment = Alignment.Center,
+                    alignment = Alignment.Center
                 )
             }
             Text(
-                text = "${item.minTemp}/${item.maxTemp}°C",
-                color = Color(232, 234, 246, 255),
-                fontSize = 25.sp
-            )
-            Text(
-                text = item.condition,
+                text = forecast.current.condition.text,
                 color = Color(232, 234, 246, 255)
             )
             Text(
-                text = item.city,
+                text = forecast.location.name,
                 color = Color(232, 234, 246, 255)
             )
         }
@@ -72,8 +88,7 @@ fun CurrentWeather (item: WeatherData) {
 }
 
 @Composable
-fun HoursWeather (list: MutableState<ArrayList<WeatherData>>) {
-
+fun HoursWeather (list: List<Hour>) {
     Card (
         modifier = Modifier.padding(horizontal = 20.dp),
         elevation = CardDefaults.cardElevation(5.dp),
@@ -81,10 +96,11 @@ fun HoursWeather (list: MutableState<ArrayList<WeatherData>>) {
     ) {
         LazyRow(
         ) {
-            itemsIndexed(list.value) { index, item ->
-                Box(
+            itemsIndexed(list) { _, item ->
+                val temp = item.temp_c.toInt().toString()
+                val time = item.time.removeRange(0..10)
 
-                ) {
+                Box() {
                     Column(
                         modifier = Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -94,17 +110,17 @@ fun HoursWeather (list: MutableState<ArrayList<WeatherData>>) {
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
                             Text(
-                                text = "${item.currentTemp}°C",
+                                text = "$temp°C",
                                 fontSize = 35.sp,
                                 color = Color(232, 234, 246, 255)
                             )
                             AsyncImage(
-                                model = "http:${item.icon}",
+                                model = "http:${item.condition.icon}",
                                 contentDescription = "",
                                 alignment = Alignment.Center
                             )
                         }
-                        Text(text = item.time,
+                        Text(text = time,
                             color = Color(232, 234, 246, 255)
                         )
                     }
@@ -116,25 +132,28 @@ fun HoursWeather (list: MutableState<ArrayList<WeatherData>>) {
 }
 
 @Composable
-fun DaysWeather (list: MutableState<ArrayList<WeatherData>>) {
+fun DaysWeather (list: List<Forecastday>) {
 
     Card (
         modifier = Modifier
             .padding(20.dp)
-            .fillMaxWidth(),
+            .fillMaxSize(),
         elevation = CardDefaults.cardElevation(5.dp),
         colors = CardDefaults.cardColors(containerColor = Color(92, 107, 192, 255))
     ) {
         LazyColumn {
-            itemsIndexed(list.value) {
+            itemsIndexed(list) {
                 index, item ->
+
+                val minTemp = item.day.mintemp_c.toInt().toString()
+                val maxTemp = item.day.maxtemp_c.toInt().toString()
 
                 val date : String
 
                 if (index == 0) {
                     date = stringResource(R.string.today_word)
                 } else {
-                    date = item.date.replace("-",".")
+                    date = item.date
                 }
 
                 Row (
@@ -148,29 +167,29 @@ fun DaysWeather (list: MutableState<ArrayList<WeatherData>>) {
                     Text(
                         date,
                         modifier = Modifier.padding(start = 5.dp),
-                        color = Color(232, 234, 246, 255),
-                        )
+                        color = Color(232, 234, 246, 255)
+                    )
                     Column (
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.End
                     ) {
                         Text(
-                            text = "${item.minTemp}/${item.maxTemp}°C",
+                            text = "$minTemp/$maxTemp°C",
                             fontSize = 35.sp,
                             color = Color(232, 234, 246, 255)
                         )
                         Row {
                             AsyncImage(
-                                model = "http:${item.icon}",
+                                model = "http:${item.day.condition.icon}",
                                 contentDescription = "",
                                 alignment = Alignment.Center,
                                 modifier = Modifier.padding(start = 40.dp)
                             )
                             Text(
-                                text = item.condition,
+                                text = item.day.condition.text,
                                 textAlign = TextAlign.Center,
-                                color = Color(232, 234, 246, 255),
-                                )
+                                color = Color(232, 234, 246, 255)
+                            )
                         }
                     }
                 }
