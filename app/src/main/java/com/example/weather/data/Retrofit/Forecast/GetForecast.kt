@@ -1,4 +1,4 @@
-package com.example.weather.data.dataManager.retrofit
+package com.example.weather.data.managerAPI.retrofit
 
 import retrofit2.Response
 import retrofit2.http.GET
