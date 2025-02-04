@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
                         is ResponseState.Error -> navController.navigate("Error")
                         is ResponseState.Loaded -> navController.navigate("Loaded")
                         ResponseState.Loading -> navController.navigate("Loading")
-                        null -> weatherViewModel.getForecastByCity("")
+                        null -> weatherViewModel.getForecastByCity("Moscow")
                     }
                 }
 

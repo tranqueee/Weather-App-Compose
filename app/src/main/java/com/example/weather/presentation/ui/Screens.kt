@@ -311,28 +311,27 @@ class Screens (
 }
 
 fun forecastByHoursManager(forecast: MainForecast):ArrayList<Hour> {
-    var firstDayForecast = forecast.forecast.forecastday[0].hour
+    val firstDayForecast = forecast.forecast.forecastday[0].hour
     var secondDayForecast = forecast.forecast.forecastday[1].hour
     val currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH")).toInt()
+    val iterator = firstDayForecast.iterator()
 
-    for (i in 1..firstDayForecast.size) {
-        val item = firstDayForecast[i-1]
+    while (iterator.hasNext()){
+        val item = iterator.next()
         val time = item.time.removeRange(0..10)
         val cardTime = time.removeRange(2..4).toInt()
 
         if (cardTime < currentTime) {
-            firstDayForecast.removeAt(i-1)
+            iterator.remove()
         }
     }
 
-    for (i in 0..24) {
-        val item = firstDayForecast[i]
-        val time = item.time.removeRange(0..10)
-        val cardTime = time.removeRange(2..4).toInt()
-
-        if (firstDayForecast.size < 24) {
-            firstDayForecast.add(secondDayForecast[i])
+    if (firstDayForecast.size < 24){
+        val listToAdd = ArrayList<Hour>()
+        for(i in 1..24-firstDayForecast.size){
+            listToAdd.add(secondDayForecast[i-1])
         }
+        firstDayForecast.addAll(listToAdd)
     }
 
     return firstDayForecast

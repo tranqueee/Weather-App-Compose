@@ -17,4 +17,4 @@ This is my Android Studio app project, which gives you weather forecast by locat
 
 ## Screenshots
 
-TODO
+![Image 1](https://github.com/tranqueee/screenshots/blob/main/Screenshot_20250204_072519.png)
