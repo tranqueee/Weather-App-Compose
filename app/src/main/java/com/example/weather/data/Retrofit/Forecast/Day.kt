@@ -1,4 +1,4 @@
-package com.example.weather.data.managerAPI.retrofit
+package com.example.weather.data.Retrofit.Forecast
 
 import com.google.gson.annotations.SerializedName
 

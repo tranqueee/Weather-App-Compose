@@ -4,4 +4,6 @@
     <string name="request_language">ru</string>
     <string name="today_word">Сегодня</string>
     <string name="loading">Загрузка</string>
+    <string name="search_hint">Город</string>
+    <string name="search_button">Поиск</string>
 </resources>

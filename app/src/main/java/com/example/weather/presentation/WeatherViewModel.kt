@@ -1,4 +1,4 @@
-package com.example.weather
+package com.example.weather.presentation
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

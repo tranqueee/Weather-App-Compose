@@ -3,4 +3,6 @@
     <string name="request_language">en</string>
     <string name="today_word">Today</string>
     <string name="loading">Loading</string>
+    <string name="search_hint">City</string>
+    <string name="search_button">Search</string>
 </resources>

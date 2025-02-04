@@ -1,7 +1,7 @@
-package com.example.weather.data.managerAPI
+package com.example.weather.data.Retrofit
 
 import com.example.weather.data.BASE_URL
-import com.example.weather.data.managerAPI.retrofit.GetForecast
+import com.example.weather.data.Retrofit.Forecast.GetForecast
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 

@@ -1,4 +1,4 @@
-package com.example.weather.UI
+package com.example.weather.presentation.ui
 
 import android.app.Activity
 import androidx.compose.foundation.background
@@ -37,8 +37,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.weather.R
-import com.example.weather.WeatherViewModel
+import com.example.weather.data.Retrofit.Forecast.Hour
+import com.example.weather.presentation.WeatherViewModel
 import com.example.weather.data.Retrofit.Forecast.MainForecast
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 class Screens (
@@ -195,7 +198,9 @@ class Screens (
 
     @Composable
     fun HoursWeather(forecast: MainForecast) {
-        val list = forecast.forecast.forecastday[0].hour
+        val list: MutableList<Hour> = forecastByHoursManager(forecast)
+        val currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH")).toInt()
+
         Card(
             modifier = Modifier.padding(horizontal = 20.dp),
             elevation = CardDefaults.cardElevation(5.dp),
@@ -236,7 +241,6 @@ class Screens (
                 }
             }
         }
-
     }
 
     @Composable
@@ -304,4 +308,32 @@ class Screens (
             }
         }
     }
+}
+
+fun forecastByHoursManager(forecast: MainForecast):ArrayList<Hour> {
+    var firstDayForecast = forecast.forecast.forecastday[0].hour
+    var secondDayForecast = forecast.forecast.forecastday[1].hour
+    val currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH")).toInt()
+
+    for (i in 1..firstDayForecast.size) {
+        val item = firstDayForecast[i-1]
+        val time = item.time.removeRange(0..10)
+        val cardTime = time.removeRange(2..4).toInt()
+
+        if (cardTime < currentTime) {
+            firstDayForecast.removeAt(i-1)
+        }
+    }
+
+    for (i in 0..24) {
+        val item = firstDayForecast[i]
+        val time = item.time.removeRange(0..10)
+        val cardTime = time.removeRange(2..4).toInt()
+
+        if (firstDayForecast.size < 24) {
+            firstDayForecast.add(secondDayForecast[i])
+        }
+    }
+
+    return firstDayForecast
 }
